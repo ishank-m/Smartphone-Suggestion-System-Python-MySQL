@@ -1,13 +1,15 @@
-import mysql.connector as mysql, pickle, os
+import mysql.connector as mysql, pickle, os    #importing necessary modules
 
-mycon = mysql.connect(host="localhost",user="root",passwd="12345")
+mycon = mysql.connect(host="localhost",user="root",passwd="12345")  #connecting to the locally installed MySQL with localhost as host, root as username and 12345 as password
 cursor = mycon.cursor()
+
+#password for the administrator to access the admin menu.
 admin_pass='12345'
 temp=[]
 
 def main():
-    cursor.execute("CREATE DATABASE IF NOT EXISTS db")
-    cursor.execute("USE db")
+    cursor.execute("CREATE DATABASE IF NOT EXISTS db")        #creating and using the database on the local 
+    cursor.execute("USE db")                                  #machine if it doesn't already exist automatically.
     mycon.commit()
     global admin_pass
     while True:
@@ -39,7 +41,7 @@ def main():
                         elif choice==6:
                             view_requests()
                             continue
-                        elif choice==7:
+                        elif choice==7:            #changing the admin password by modifying the value of admin_pass in this .py file in place using text file handling logic. 
                             admin_pass = input("Enter New Password: ")
                             with open(__file__, "r") as file:
                                 lines = file.readlines()
@@ -81,7 +83,9 @@ def main():
             print("----Invalid Choice----")
             continue
 
+######### Admin Menu Functions #########
 
+#When the program runs on a machine for the first time, this function creates on the system a default MySQL table comprising 50 smartphone records.
 def create_table():
     cursor.execute("DROP TABLE IF EXISTS smartphones")
     create="CREATE TABLE smartphones(brand_name VARCHAR(30),model VARCHAR(50),price INT,rating INT,has_5g VARCHAR(5),has_nfc VARCHAR(5),processor_name VARCHAR(50),processor_brand VARCHAR(30),num_cores INT,battery_capacity INT,ram_capacity INT,internal_memory INT,refresh_rate INT,primary_camera_rear INT,primary_camera_front INT)"
@@ -91,7 +95,7 @@ def create_table():
     mycon.commit()
     print("----Table successfully created on the system----")
 
-
+# Admin can add a new record in the MySQL Table.
 def add_data():
     while True:
         name=input("Enter the brand name- ")
@@ -119,7 +123,7 @@ def add_data():
         elif c.lower()=="yes":
             continue
             
-
+# Admin can modify a particular record from the MySQL table by providing the name of the smartphone and what data about it is to be modified.
 def modify_data():
     model = input("Enter the model name of the smartphone to modify: ")
     while True:
@@ -191,15 +195,14 @@ def modify_data():
         elif more.lower()=="yes":
             continue
 
-
-
+# Displays all the records in the MySQL Table on the local machine.
 def display_records():
     cursor.execute("SELECT * FROM smartphones")
     records = cursor.fetchall()
     for record in records:
         print(record)
 
-
+# Deletes a particular smartphone record after taking input of the model name of the smartphone from the admin.
 def delete_data():
     while True:
         mod=input("Enter the name of the model you want to delete: ")
@@ -217,21 +220,7 @@ def delete_data():
         elif more.lower()=="yes":
             continue
 
-
-def request():
-    a=input("Enter the requested model of smartphone: ")
-    try:
-        with open("Requests", "rb") as file:
-            l=pickle.load(file)
-            l.append([a])
-        with open("Requests", "wb") as file:
-            pickle.dump(l,file)
-    except FileNotFoundError:
-        with open("Requests", "wb") as file:
-            pickle.dump([[a]], file)
-    print("----Request Submitted Successfully----")
-
-
+# Can view viewers' request for a particular phone model by accessing a local binary file storing those requests in form of a list
 def view_requests():
     while True:
         print("1. View all Requests\n2. Delete a Request\n3. Clear all Requests\n4. Back")
@@ -267,8 +256,14 @@ def view_requests():
         else:
             print("----Invalid Choice----")
             continue
-        
 
+
+
+######### User/Viewer Menu Functions #########
+
+
+
+# Function that filters and displays smartphone records from the table based on the user's desired specifications of the smartphone
 def suggestive():
     global temp
     cursor.execute('SELECT DISTINCT brand_name FROM smartphones')
@@ -296,7 +291,7 @@ def suggestive():
             break
     
 
-    #internal storage
+    # checking internal storage
     feature_list = []
     for i in super_list:
         if i[11] not in feature_list:
@@ -312,7 +307,7 @@ def suggestive():
             temp.append(phone_data)
     super_list = temp
 
-    #processor
+    # checking processor
     feature_list = []
     for i in super_list:
         if i[7] not in feature_list:
@@ -330,7 +325,7 @@ def suggestive():
     super_list = temp
 
 
-    #ram_capacity
+    #checking ram_capacity
     feature_list = []
     for i in super_list:
         if i[10] not in feature_list:
@@ -347,7 +342,7 @@ def suggestive():
             temp.append(phone_data)
     super_list = temp
 
-    #primary_camera_rear        
+    #checking primary_camera_rear        
     feature_list = []
     for i in super_list:
         if i[13] not in feature_list:
@@ -365,7 +360,7 @@ def suggestive():
             temp.append(phone_data)
     super_list = temp
 
-    #primary_camera_front
+    #checking primary_camera_front
     feature_list = []
     for i in super_list:
         if i[14] not in feature_list:
@@ -384,7 +379,7 @@ def suggestive():
     super_list = temp
     print(super_list)
 
-    #battery_capacity
+    #checking battery_capacity
     feature_list = []
     for i in super_list:
         if i[9] not in feature_list:
@@ -401,7 +396,7 @@ def suggestive():
         if battery==phone_data[9]:
             temp.append(phone_data)
     super_list = temp
-
+    #displaying possible match(es) to the user's desired specifications or displays appropriate message when no matches were found.
     if super_list:
         for record in super_list:
             print('-'*70)
@@ -412,5 +407,22 @@ def suggestive():
         print("----No match found----")
         print('-'*70)
 
+
+# Function that takes user request of a particular smartphone model they would like to be added to the database, and stores it as a list in a binary file.
+def request():
+    a=input("Enter the requested model of smartphone: ")
+    try:
+        with open("Requests", "rb") as file:
+            l=pickle.load(file)
+            l.append([a])
+        with open("Requests", "wb") as file:
+            pickle.dump(l,file)
+    except FileNotFoundError:
+        with open("Requests", "wb") as file:
+            pickle.dump([[a]], file)
+    print("----Request Submitted Successfully----")
+
+
+# Calls the main function when program is run from the terminal
 if __name__=="__main__":
     main()
